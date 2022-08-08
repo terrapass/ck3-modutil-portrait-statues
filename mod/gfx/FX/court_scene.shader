@@ -12,6 +12,9 @@ Includes = {
 	"jomini/portrait_user_data.fxh"
 	"constants.fxh"
 	"standardfuncsgfx.fxh"
+	# MOD(godherja)
+	"GH_portrait_effects.fxh"
+	# END MOD
 }
 
 PixelShader =
@@ -647,29 +650,6 @@ PixelShader =
 		}
 
 		// MOD(godherja)
-		void GH_TryApplyStatueEffect(in GH_SPortraitEffect PortraitEffect, inout float4 Diffuse, inout float4 Properties)
-		{
-			if (PortraitEffect.Type != GH_PORTRAIT_EFFECT_TYPE_STATUE)
-				return;
-
-			if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_GOLD))
-			{
-				Diffuse    = float4(1.0, 0.8, 0.2, 1.0);
-				Properties = float4(0.0, 1.0, 1.0, 0.0);
-			}
-			else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_MARBLE))
-			{
-				Diffuse    = float4(1.0, 1.0, 1.0, 1.0);
-				Properties = float4(0.0, 0.4, 0.25, 0.8);
-			}
-			else // Unrecognized material param
-			{
-				// Use some loud color like magenta to communicate the error
-				Diffuse    = float4(1.0, 0.0, 1.0, 1.0);
-				Properties = float4(1.0, 0.0, 0.0, 1.0);
-			}
-		}
-
 		//float3 CommonPixelShader( float4 Diffuse, float4 Properties, float3 NormalSample, in VS_OUTPUT_PDXMESHPORTRAIT Input, float HoverMult )
 		float3 CommonPixelShader( float4 Diffuse, float4 Properties, float3 NormalSample, in VS_OUTPUT_PDXMESHPORTRAIT Input, in GH_SPortraitEffect PortraitEffect, float HoverMult )
 		// END MOD
