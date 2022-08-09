@@ -27,3 +27,9 @@ GH_must_use_statue_effect_copper = {
 	is_alive = yes
 	has_variable = GH_is_copper_statue
 }
+
+# Scope: Character
+GH_must_use_statue_effect_copper_rust = {
+	is_alive = yes
+	has_variable = GH_is_copper_rust_statue
+}

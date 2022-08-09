@@ -97,4 +97,23 @@ GH_portrait_effects_statue = {
 			}
 		}
 	}
+
+	statue_copper_rust = {
+		dna_modifiers = {
+			morph = {
+				mode = add
+				gene = gene_GH_marker_statue
+				template = marker_statue_copper_rust
+				value = 1.0
+			}
+		}
+
+		weight = {
+			base = 0
+			modifier = {
+				add = @GH_active_effect_weight
+				GH_must_use_statue_effect_copper_rust = yes
+			}
+		}
+	}
 }

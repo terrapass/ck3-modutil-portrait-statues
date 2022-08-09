@@ -16,8 +16,12 @@ PixelShader =
 
 		static const float4 GH_MARKER_TOP_LEFT_STATUE = float4(0.0f, 1.0f, 0.0f, 0.0f);
 
-		static const float4 GH_MARKER_TOP_RIGHT_STATUE_GOLD   = float4(1.0f, 0.0f, 0.0f, 0.0f);
-		static const float4 GH_MARKER_TOP_RIGHT_STATUE_MARBLE = float4(0.0f, 1.0f, 0.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_GOLD        = float4(1.0f, 0.0f, 0.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_MARBLE      = float4(0.0f, 1.0f, 0.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_LIMESTONE   = float4(1.0f, 1.0f, 0.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_STONE       = float4(0.0f, 0.0f, 1.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_COPPER      = float4(1.0f, 0.0f, 1.0f, 0.0f);
+		static const float4 GH_MARKER_TOP_RIGHT_STATUE_COPPER_RUST = float4(0.0f, 1.0f, 1.0f, 0.0f);
 
 		// ENUM: portrait effect type
 		static const uint GH_PORTRAIT_EFFECT_TYPE_NONE   = 0;
@@ -64,6 +68,26 @@ PixelShader =
 			{
 				Diffuse    = float4(1.0, 1.0, 1.0, 1.0);
 				Properties = float4(0.0, 0.4, 0.25, 0.8);
+			}
+			else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_LIMESTONE))
+			{
+				Diffuse    = float4(0.9, 0.8, 0.7, 0.8);
+				Properties = float4(0.0, 0.1, 0.0, 0.1);
+			}
+			else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_STONE))
+			{
+				Diffuse    = float4(0.2, 0.2, 0.2, 0.4);
+				Properties = float4(0.0, 0.0, 0.0, 0.0);
+			}
+			else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_COPPER))
+			{
+				Diffuse    = float4(1.0, 0.3, 0.2, 1.0);
+				Properties = float4(0.0, 1.0, 1.0, 0.0);
+			}
+			else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_COPPER_RUST))
+			{
+				Diffuse    = float4(0.2, 1.0, 0.7, 1.0);
+				Properties = float4(0.0, 0.0, 0.0, 0.0);
 			}
 			else // Unrecognized material param
 			{
