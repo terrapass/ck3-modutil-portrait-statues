@@ -16,12 +16,14 @@ PixelShader =
 
 		static const float4 GH_MARKER_TOP_LEFT_STATUE = float4(0.0f, 1.0f, 0.0f, 0.0f);
 
+		// SECTION: Statue material markers
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_GOLD        = float4(1.0f, 0.0f, 0.0f, 0.0f);
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_MARBLE      = float4(0.0f, 1.0f, 0.0f, 0.0f);
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_LIMESTONE   = float4(1.0f, 1.0f, 0.0f, 0.0f);
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_STONE       = float4(0.0f, 0.0f, 1.0f, 0.0f);
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_COPPER      = float4(1.0f, 0.0f, 1.0f, 0.0f);
 		static const float4 GH_MARKER_TOP_RIGHT_STATUE_COPPER_RUST = float4(0.0f, 1.0f, 1.0f, 0.0f);
+		// END SECTION
 
 		// ENUM: portrait effect type
 		static const uint GH_PORTRAIT_EFFECT_TYPE_NONE   = 0;
@@ -59,6 +61,7 @@ PixelShader =
 			if (PortraitEffect.Type != GH_PORTRAIT_EFFECT_TYPE_STATUE)
 				return;
 
+			// SECTION: Statue material selection
 			if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_GOLD))
 			{
 				Diffuse    = float4(1.0, 0.8, 0.2, 1.0);
@@ -89,6 +92,7 @@ PixelShader =
 				Diffuse    = float4(0.2, 1.0, 0.7, 1.0);
 				Properties = float4(0.0, 0.0, 0.0, 0.0);
 			}
+			// END SECTION
 			else // Unrecognized material param
 			{
 				// Use some loud color like magenta to communicate the error
