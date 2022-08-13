@@ -15,7 +15,7 @@ You can also load the contents of this repo as a separate mod in your playset to
 
 This statue effects implementation has been extracted from [**Godherja: The Dying World**](https://steamcommunity.com/sharedfiles/filedetails/?id=2326030123) mod, for which it was originally developed.
 
-Special thanks to **Buck (Elder Kings 2)** for coming up with the trick of smuggling technical information via portrait decal mip-maps, which this mod utility uses to enable statue effects without relying on environment hacks.
+Special thanks to **Buck (Elder Kings 2)** for pioneering the trick of smuggling technical information via portrait decal mip-maps, which this mod utility uses to enable statue effects without relying on environment hacks.
 Thanks to **The Fallen Eagle** mod for coming up with material colors and values for limestone, stone and copper.
 
 Table of Contents
@@ -97,6 +97,8 @@ else if (GH_MarkerTexelEquals(PortraitEffect.Param, GH_MARKER_TOP_RIGHT_STATUE_C
 
 3. Create a fully transparent black 1024x1024 texture and save it as a BC3/DXT5 `.dds` with mip-maps to `gfx/models/portraits/decals/GH_markers`.
 
-4. Using either built-in tools in GIMP or a separate application, such as `detach` and `stitch` utilities from [NVIDIA's Legacy Texture Tools](https://developer.nvidia.com/legacy-texture-tools) DDS Utilities, edit level 6 (16x16) mip-map of your new `.dds` texture and set its top-left pixel's RGBA value to `(0, 255, 0, 0)` and its top-right pixel - to the value you specified for your marker constant in `gfx/FX/GH_portrait_effects.fxh`, then save changes to your `.dds`. If you are using Paint.NET to edit this mip map, make sure your pencil tool is set to "Overwrite", rather than "Normal" mode, so that the edited pixels get the exact values you entered.
+4. Using either built-in tools in GIMP or a separate application, such as `detach` and `stitch` utilities from [NVIDIA's Legacy Texture Tools](https://developer.nvidia.com/legacy-texture-tools) DDS Utilities, edit level 6 (16x16) mip-map of your new `.dds` texture and set its top-left pixel's RGBA value to `(0, 255, 0, 0)` and its top-right pixel - to the value you specified for your marker constant in `gfx/FX/GH_portrait_effects.fxh` multiplied by 255, then save changes to your `.dds`. 
+
+If you are using Paint.NET to edit this mip map, make sure your pencil tool is set to "Overwrite", rather than "Normal" mode, so that the edited pixels get the exact values you entered. If you are using GIMP, make sure you're editing the top-right pixel of the level 6 mip-map, which is at coordinates `15, 0` while mip6 is selected, rather than the top-right pixel of the entire image.
 
 5. Add a gene and a portrait modifier, using existing examples in [`common/genes/GH_genes_special_markers.txt`](https://github.com/terrapass/ck3-modutil-portrait-statues/blob/master/mod/common/genes/GH_genes_special_markers.txt) and [`gfx/portraits/portrait_modifiers/GH_portrait_effects.txt`](https://github.com/terrapass/ck3-modutil-portrait-statues/blob/master/mod/gfx/portraits/portrait_modifiers/GH_portrait_effects.txt), and set up any triggers you need for applying this new statue material to character portraits.
