@@ -5,4 +5,4 @@ tags={
 	"Portraits"
 }
 name="Portrait Statues"
-supported_version="1.6.1.2"
+supported_version="1.7.0"
