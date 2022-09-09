@@ -1,5 +1,5 @@
 includes = {
-	"jomini/portrait_decal_utils.fxh"
+	"jomini/texture_decals_base.fxh"
 	"jomini/portrait_user_data.fxh"
 	# MOD(godherja)
 	"GH_portrait_effects.fxh"
@@ -49,56 +49,6 @@ PixelShader =
 
 	Code
 	[[		
-		// Should match SPortraitDecalTextureSet::BlendMode
-		#define BLEND_MODE_OVERLAY 0
-		#define BLEND_MODE_REPLACE 1
-		#define BLEND_MODE_HARD_LIGHT 2
-		#define BLEND_MODE_MULTIPLY 3
-		// Special handling of normal Overlay blend mode (in shader only)
-		#define BLEND_MODE_OVERLAY_NORMAL 4
-
-		float OverlayDecal( float Target, float Blend )
-		{
-			return float( Target > 0.5f ) * ( 1.0f - ( 2.0f * ( 1.0f - Target ) * ( 1.0f - Blend ) ) ) +
-				   float( Target <= 0.5f ) * ( 2.0f * Target * Blend );
-		}
-
-		float HardLightDecal( float Target, float Blend )
-		{
-			return float( Blend > 0.5f ) * ( 1.0f - ( 2.0f * ( 1.0f - Target ) * ( 1.0f - Blend ) ) ) +
-				   float( Blend <= 0.5f ) * ( 2.0f * Target * Blend );
-		}
-
-		float4 BlendDecal( uint BlendMode, float4 Target, float4 Blend, float Weight )
-		{
-			float4 Result = vec4( 0.0f );
-
-			if ( BlendMode == BLEND_MODE_OVERLAY )
-			{
-				Result = float4( OverlayDecal( Target.r, Blend.r ), OverlayDecal( Target.g, Blend.g ),
-								 OverlayDecal( Target.b, Blend.b ), OverlayDecal( Target.a, Blend.a ) );
-			}
-			else if ( BlendMode == BLEND_MODE_REPLACE )
-			{
-				Result = Blend;
-			}
-			else if ( BlendMode == BLEND_MODE_HARD_LIGHT )
-			{
-				Result = float4( HardLightDecal( Target.r, Blend.r ), HardLightDecal( Target.g, Blend.g ),
-								 HardLightDecal( Target.b, Blend.b ), HardLightDecal( Target.a, Blend.a ) );
-			}
-			else if ( BlendMode == BLEND_MODE_MULTIPLY )
-			{
-				Result = Target * Blend;
-			}
-			else if ( BlendMode == BLEND_MODE_OVERLAY_NORMAL )
-			{
-				Result = float4( OverlayNormal( Target.xyz, Blend.xyz ), Target.a );
-			}
-
-			return lerp( Target, Result, Weight );
-		}
-
 		struct DecalData
 		{
 			uint _DiffuseIndex;

@@ -8,6 +8,7 @@ Includes = {
 	"jomini/jomini_lighting.fxh"
 	"jomini/jomini_fog.fxh"
 	"jomini/portrait_accessory_variation.fxh"
+	"jomini/portrait_coa.fxh"
 	"jomini/portrait_decals.fxh"
 	"jomini/portrait_user_data.fxh"
 	"constants.fxh"
@@ -91,6 +92,15 @@ PixelShader =
 		SampleModeU = "Wrap"
 		SampleModeV = "Wrap"
 	}
+	TextureSampler CoaTexture 
+	{
+		Index = 12
+		MagFilter = "Linear"
+		MinFilter = "Linear"
+		MipFilter = "Linear"
+		SampleModeU = "Clamp"
+		SampleModeV = "Clamp"
+	}
 	TextureSampler ShadowTexture
 	{
 		Ref = PdxShadowmap
@@ -118,12 +128,38 @@ VertexStruct VS_OUTPUT_PDXMESHPORTRAIT
 	float3 	Bitangent		: TEXCOORD2;
 	float2 	UV0				: TEXCOORD3;
 	float2 	UV1				: TEXCOORD4;
-	float3 	WorldSpacePos	: TEXCOORD5;
+	float2 	UV2				: TEXCOORD5;
+	float3 	WorldSpacePos	: TEXCOORD6;
+	float4 	ShadowProj		: TEXCOORD7;
 	# This instance index is used to fetch custom user data from the Data[] array (see pdxmesh.fxh)
-	uint 	InstanceIndex	: TEXCOORD6;
+	uint 	InstanceIndex	: TEXCOORD8;
 };
 
-# Portrait constants
+VertexStruct VS_INPUT_PDXMESHSTANDARD_ID
+{
+    float3 Position			: POSITION;
+	float3 Normal      		: TEXCOORD0;
+	float4 Tangent			: TEXCOORD1;
+	float2 UV0				: TEXCOORD2;
+@ifdef PDX_MESH_UV1     	
+	float2 UV1				: TEXCOORD3;
+@endif
+@ifdef PDX_MESH_UV2
+	float2 UV2				: TEXCOORD4;
+@endif
+
+
+	uint2 InstanceIndices 	: TEXCOORD5;
+	
+@ifdef PDX_MESH_SKINNED
+	uint4 BoneIndex 		: TEXCOORD6;
+	float3 BoneWeight		: TEXCOORD7;
+@endif
+
+	uint VertexID			: PDX_VertexID;
+};
+
+# Portrait constants (SPortraitConstants)
 ConstantBuffer( 5 )
 {
 	float4 		vPaletteColorSkin;
@@ -144,6 +180,9 @@ ConstantBuffer( 5 )
 	int 		_; // Alignment
 
 	float4 		PatternColorOverrides[16];
+	float4		CoaColor1;
+	float4		CoaColor2;
+	float4		CoaOffsetAndScale;
 
 	float		HasDiffuseMapOverride;
 	float		HasNormalMapOverride;
@@ -172,10 +211,128 @@ VertexShader = {
 			Out.Bitangent = In.Bitangent;
 			Out.UV0 = In.UV0;
 			Out.UV1 = In.UV1;
+			Out.UV2 = In.UV2;
 			Out.WorldSpacePos = In.WorldSpacePos;
 			return Out;
 		}
 	]]
+	
+	MainCode VS_portrait_blend_shapes
+	{
+		Input = "VS_INPUT_PDXMESHSTANDARD_ID"
+		Output = "VS_OUTPUT_PDXMESHPORTRAIT"
+		Code
+		[[
+			PDX_MAIN
+			{
+			  	VS_OUTPUT_PDXMESHPORTRAIT Out;
+				
+				float4 vPosition = float4( Input.Position.xyz, 1.0f );
+				float3 vBlendPositionDiff;
+				float3 vBlendNormalDiff;
+				float3 vBlendTangentDiff;
+				ProcessBlendShapes( vBlendPositionDiff, vBlendNormalDiff, vBlendTangentDiff, Input.VertexID );
+				vPosition.xyz += vBlendPositionDiff;
+				
+				float4x4 WorldMatrix = PdxMeshGetWorldMatrix( Input.InstanceIndices.y );
+			#ifdef PDX_MESH_SKINNED
+				float4 vSkinnedPosition = float4( 0, 0, 0, 0 );
+				float3 vSkinnedNormal = float3( 0, 0, 0 );
+				float3 vSkinnedTangent = float3( 0, 0, 0 );
+				float3 vSkinnedBitangent = float3( 0, 0, 0 );
+			
+				float4 vWeight = float4( Input.BoneWeight.xyz, 1.0f - Input.BoneWeight.x - Input.BoneWeight.y - Input.BoneWeight.z );
+			
+				for( int i = 0; i < PDXMESH_MAX_INFLUENCE; ++i )
+			    {
+					int nIndex = int( Input.BoneIndex[i] );
+					float4x4 mat = BoneMatrices[nIndex + Input.InstanceIndices.x];
+					vSkinnedPosition += mul( mat, vPosition ) * vWeight[i];
+
+					float3x3 NormalTransform = CastTo3x3( BoneNormalMatrices[ nIndex + Input.InstanceIndices.x ] );
+			
+					float3 vNormal = mul( NormalTransform, Input.Normal + vBlendNormalDiff );
+					float3 vTangent = mul( NormalTransform, Input.Tangent.xyz + vBlendTangentDiff );
+					float3 vBitangent = cross( vNormal, vTangent ) * Input.Tangent.w;
+			
+					vSkinnedNormal += vNormal * vWeight[i];
+					vSkinnedTangent += vTangent * vWeight[i];
+					vSkinnedBitangent += vBitangent * vWeight[i];
+				}
+			
+				Out.Position = mul( WorldMatrix, vSkinnedPosition );
+				
+				Out.Normal = normalize( mul( CastTo3x3(WorldMatrix), normalize( vSkinnedNormal ) ) );
+				Out.Tangent = normalize( mul( CastTo3x3(WorldMatrix), normalize( vSkinnedTangent ) ) );
+				Out.Bitangent = normalize( mul( CastTo3x3(WorldMatrix), normalize( vSkinnedBitangent ) ) );
+			#else
+				Out.Position = mul( WorldMatrix, vPosition );
+				
+				Out.Normal = normalize( mul( CastTo3x3( WorldMatrix ), Input.Normal + vBlendNormalDiff ) );
+				Out.Tangent = normalize( mul( CastTo3x3( WorldMatrix ), Input.Tangent.xyz + vBlendTangentDiff ) );
+				Out.Bitangent = normalize( cross( Out.Normal, Out.Tangent ) * Input.Tangent.w);
+			#endif
+			
+				Out.WorldSpacePos.xyz = Out.Position.xyz;
+				Out.WorldSpacePos /= WorldMatrix[3][3];
+				Out.Position = FixProjectionAndMul( ViewProjectionMatrix, Out.Position );
+				
+				Out.ShadowProj = mul( ShadowMapTextureMatrix, float4( Out.WorldSpacePos, 1.0 ) );
+				
+				Out.UV0 = Input.UV0;
+			#ifdef PDX_MESH_UV1
+				Out.UV1 = Input.UV1;
+			#else
+				Out.UV1 = vec2( 0.0 );
+			#endif
+			#ifdef PDX_MESH_UV2
+				Out.UV2 = Input.UV2;
+			#else
+				Out.UV2 = vec2( 0.0 );
+			#endif
+				Out.InstanceIndex = Input.InstanceIndices.y;
+				return Out;
+			}
+		]]
+	}
+
+	MainCode VS_portrait_blend_shapes_shadow
+	{
+		Input = "VS_INPUT_PDXMESHSTANDARD_ID"
+		Output = "VS_OUTPUT_PDXMESHSHADOWSTANDARD"
+		Code
+		[[
+			PDX_MAIN
+			{
+			  	VS_OUTPUT_PDXMESHSHADOWSTANDARD Out;
+				
+				float4 vPosition = float4( Input.Position.xyz, 1.0 );
+				float3 vBlendPositionDiff;
+				ProcessBlendShapesPositionOnly( vBlendPositionDiff, Input.VertexID );
+				vPosition.xyz += vBlendPositionDiff;
+				
+				float4x4 WorldMatrix = PdxMeshGetWorldMatrix( Input.InstanceIndices.y );
+			#ifdef PDX_MESH_SKINNED
+				float4 vSkinnedPosition = float4( 0, 0, 0, 0 );
+			
+				float4 vWeight = float4( Input.BoneWeight.xyz, 1.0f - Input.BoneWeight.x - Input.BoneWeight.y - Input.BoneWeight.z );
+				for( int i = 0; i < PDXMESH_MAX_INFLUENCE; ++i )
+			    {
+					int nIndex = int( Input.BoneIndex[i] );
+					float4x4 mat = BoneMatrices[nIndex + Input.InstanceIndices.x];
+					vSkinnedPosition += mul( mat, vPosition ) * vWeight[i];
+				}
+				Out.Position = mul( WorldMatrix, vSkinnedPosition );
+			#else
+				Out.Position = mul( WorldMatrix, vPosition );
+			#endif
+			
+				Out.Position = FixProjectionAndMul( ViewProjectionMatrix, Out.Position );
+				Out.UV_InstanceIndex = float3( Input.UV0, Input.InstanceIndices.y );
+				return Out;
+			}
+		]]
+	}
 	
 	MainCode VS_standard
 	{
@@ -524,6 +681,9 @@ PixelShader =
 				float3 NormalSample = UnpackRRxGNormal( PdxTex2D( NormalMap, UV0 ) );		
 				Properties.r = 1.0; // wipe this clean now, ready to be modified later
 				
+				#ifdef COA_ENABLED
+					ApplyCoa( Input, Diffuse, CoaColor1, CoaColor2, CoaOffsetAndScale.xy, CoaOffsetAndScale.zw, CoaTexture );
+				#endif
 				#ifdef VARIATIONS_ENABLED
 					ApplyVariationPatterns( Input, Diffuse, Properties, NormalSample );
 				#endif
@@ -813,6 +973,20 @@ Effect portrait_attachment_alpha_to_coverageShadow
 	Defines = { "PDX_MESH_BLENDSHAPES" }
 }
 
+Effect portrait_attachment_with_coa
+{
+	VertexShader = "VS_portrait_blend_shapes"
+	PixelShader = "PS_attachment"
+	Defines = { "COA_ENABLED" }
+}
+
+Effect portrait_attachment_with_coa_and_variations
+{
+	VertexShader = "VS_portrait_blend_shapes"
+	PixelShader = "PS_attachment"
+	Defines = { "COA_ENABLED" "VARIATIONS_ENABLED" }
+}
+
 Effect portrait_hair
 {
 	VertexShader = "VS_standard"
@@ -862,6 +1036,7 @@ Effect portrait_hair_opaque
 {
 	VertexShader = "VS_standard"
 	PixelShader = "PS_hair"
+	
 	Defines = { "WRITE_ALPHA_ONE" "PDX_MESH_BLENDSHAPES" }
 }
 	
