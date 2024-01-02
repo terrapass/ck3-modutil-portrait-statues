@@ -1,8 +1,8 @@
-version="0.1.1"
+version="0.1.2"
 tags={
 	"Graphics"
 	"Utilities"
 	"Portraits"
 }
 name="Portrait Statues"
-supported_version="1.9.2.1"
+supported_version="1.11.*"
