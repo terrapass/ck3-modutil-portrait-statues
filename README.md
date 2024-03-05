@@ -10,7 +10,7 @@ This repository contains modified CK3 shaders and other mod files which implemen
 You can integrate this feature into your own mod by copying the files into your mod's file structure and making adjustments if necessary (see [Integrating into Your Mod](#integration)).
 You can also load the contents of this repo as a separate mod in your playset to test it out, `mod/descriptor.mod` is provided for this purpose.
 
-**The code has been updated to be compatible with CK3 versions 1.9.0 to 1.11.*.**
+**The code has been updated to be compatible with CK3 version 1.12 (Scythe).**
 
 This statue effects implementation has been extracted from [**Godherja: The Dying World**](https://steamcommunity.com/sharedfiles/filedetails/?id=2326030123) mod, for which it was originally developed.
 
